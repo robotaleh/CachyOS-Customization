@@ -1,0 +1,656 @@
+# CachyOS — Mi guía de personalización y postinstalación personal
+
+Guía personal para preparar y personalizar un entorno CachyOS. Contiene comandos reproducibles, plantillas de `systemd` de usuario, enlaces a temas y explicaciones detalladas de opciones complejas (p. ej. `rclone`). También incluye algunos ajustes para ciertos programas especiales del entorno OPRobots y Twitch
+
+## Índice
+
+- [AUR (paru) — Paquetes recomendados](#aur)
+- [FlatPak — Paquetes](#flatpak)
+- [F3D — Modo STEP y miniaturas](#f3d---modo-step-y-miniaturas)
+- [PlatformIO y STLink — reglas udev](#platformio-y-stlink---reglas-udev)
+- [Red y Firewall](#red-y-firewall)
+- [Unidades de red (FailServer)](#unidades-de-red-failserver)
+- [Particiones y otros Discos](#particiones-y-otros-discos)
+- [Personalización de Konsole y shell](#personalizacion-de-konsole-y-shell)
+- [Gaming](#gaming)
+- [Wallpaper Engine (KDE)](#wallpaper-engine-kde)
+- [Colores y Temas (Plasma y Kvantum)](#colores-y-temas-plasma-y-kvantum)
+- [Fondo dinámico en inicio de sesión](#fondo-dinamico-en-inicio-de-sesion)
+- [Gestión de ventanas](#gestion-de-ventanas)
+- [Vivaldi](#vivaldi)
+- [Brave](#brave)
+- [Inicio Automático](#inicio-automatico)
+- [VSCode](#vscode)
+- [Emoji Picker: Pegado automático](#emoji-picker-pegado-automatico)
+- [OBS](#obs)
+- [MacroDeck](#macrodeck)
+- [Google Drive con rclone — guía completa](#google-drive-con-rclone)
+- [TeamViewer](#teamviewer)
+
+---
+
+## AUR
+
+Instala los paquetes listados desde AUR con `paru -S`:
+
+```bash
+paru -S --sudoloop \
+	brave-bin vivaldi discord blender freecad gimp inkscape kicad mypaint \
+	qbittorrent kdenlive obs-browser obs-pipewire-audio-capture obs-3d-effect \
+	qt6-webengine vlc visual-studio-code-bin pulseview spotify bazaar jdk-openjdk \
+	archlinux-java-run stm32cubemx orca-slicer f3d
+```
+
+> --sudoloop: Mantiene activa la autenticación de sudo durante toda la operación
+
+Nota rápida: si `orca-slicer` falla en su versión normal, usa `orca-slicer-bin`.
+
+---
+
+## FlatPak
+
+Instalar `bottles` desde Flathub para ejecución de aplicaciones de Windows:
+
+```bash
+flatpak install flathub com.usebottles.bottles
+```
+
+---
+
+## F3D — Modo STEP y miniaturas
+
+Crear un lanzador que fuerce lectura STEP:
+
+```bash
+cp /usr/share/applications/f3d.desktop ~/.local/share/applications/f3d-step.desktop
+nano ~/.local/share/applications/f3d-step.desktop
+```
+
+Dentro del `.desktop`, añade o modifica:
+
+```ini
+Exec=f3d --force-reader=STEP %F
+Name=F3D STEP Viewer
+```
+
+Actualizar la base de datos de aplicaciones:
+
+```bash
+update-desktop-database ~/.local/share/applications
+```
+
+Miniaturas para STEP (thumbnailer):
+
+```bash
+mkdir -p ~/.local/share/thumbnailers
+cp /usr/share/thumbnailers/f3d-plugin-occt.thumbnailer ~/.local/share/thumbnailers/
+nano ~/.local/share/thumbnailers/f3d-plugin-occt.thumbnailer
+```
+
+Dentro del archivo `*.thumbnailer` ajusta `Exec=` así:
+
+```ini
+Exec=f3d --config=thumbnail --load-plugins=occt --force-reader=STEP --verbose=quiet --output=%o --resolution=%s,%s %i
+```
+
+Forzar regeneración de miniaturas y reiniciar Dolphin:
+
+```bash
+rm -rf ~/.cache/thumbnails/*
+kquitapp6 dolphin || true
+dolphin &
+```
+
+> Es necesario activar las miniaturas para los tipos de ficheros necesarios; en mi caso todos
+
+## PlatformIO y STLink — reglas udev
+
+PlatformIO:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/platformio/platformio-core/develop/platformio/assets/system/99-platformio-udev.rules | sudo tee /etc/udev/rules.d/99-platformio-udev.rules
+sudo udevadm control --reload-rules
+sudo udevadm trigger
+```
+
+ST-Link:
+
+```bash
+sudo nano /etc/udev/rules.d/49-stlink-udev.rules
+```
+
+Añadir el siguiente contenido al fichero.
+
+```ini
+# ST-Link V2
+ATTRS{idVendor}=="0483", ATTRS{idProduct}=="3748", MODE="0666"
+
+# ST-Link V2-1
+ATTRS{idVendor}=="0483", ATTRS{idProduct}=="374b", MODE="0666"
+
+# ST-Link V2.1 (en mi caso)
+ATTRS{idVendor}=="0483", ATTRS{idProduct}=="3752", MODE="0666"
+
+# ST-Link V3
+ATTRS{idVendor}=="0483", ATTRS{idProduct}=="374f", MODE="0666"
+```
+
+> Es posible que haya dispositivos con diferente _idVendor_ o _idProduct_
+
+Recargar reglas tras editar:
+
+```bash
+sudo udevadm control --reload-rules
+sudo udevadm trigger
+```
+
+## Red y Firewall
+
+Abrir puerto para MacroDeck (TCP 8191):
+
+```bash
+sudo ufw allow 8191/tcp
+```
+
+---
+
+## Unidades de red (FailServer)
+
+Montaje desde Dolphin:
+
+1. Abre `smb://<LOCAL_IP_OR_HOSTNAME>` en Dolphin.
+2. Accede por primera vez a algún directorio y guarda las credenciales
+3. Luego, pulsa botón derecho y selecciona "Añadir a Lugares" para montarlo automáticamente de ahora en adelante.
+
+## Particiones y otros Discos
+
+Comprueba las particiones y discos para obtener su UUID:
+
+```bash
+lsblk -f
+```
+
+Edita el fichero fstab para montar automáticamente las unidades al iniciar
+
+```bash
+sudo nano /etc/fstab
+```
+
+Añade al final del fichero las configuraciones que correspondan
+
+```ini
+# storage
+UUID=<UUID_STORAGE>  /mnt/storage  btrfs  defaults,noatime,compress=zstd:3  0  0
+
+# OPRobots
+UUID=<UUID_OPROBOTS>  /mnt/OPRobots ntfs3  rw,user,exec,uid=<UID>,gid=<GID>,noatime  0  0
+
+# NobaraOS
+UUID=<UUID_NOBARA>  /mnt/NobaraOS  btrfs  defaults,noatime  0  0
+```
+
+> [!TIP]
+> Para obtener tu UID y GID puedes ejecutar `id -u` e `id -g` respectivamente en una terminal
+
+Verificar montajes antes de reiniciar:
+
+```bash
+sudo mount -a
+```
+
+> Si reinicias sin comprobar si no hay errores, puede que el sistema entre en "modo emergencia"
+
+## Personalización de Konsole y shell
+
+Instalación y configuración rápida:
+
+```bash
+unzip -o ./assets/plasma6macos-fonts.zip -d ~/.local/share/fonts
+paru -S zsh
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" -- --unattended
+git clone https://github.com/zsh-users/zsh-autosuggestions ~/.oh-my-zsh/custom/plugins/zsh-autosuggestions
+git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting
+git clone https://github.com/zsh-users/zsh-history-substring-search ~/.oh-my-zsh/custom/plugins/zsh-history-substring-search
+curl -sS https://starship.rs/install.sh | sh
+unzip -o ./assets/plasma6macos-zshstarship-konsole.zip -d ~
+paru -S fastfetch
+mkdir -p ~/.local/share/fastfetch
+unzip -o ./assets/plasma6macos-fastfetch.zip "ascii/*" "presets/*" -d ~/.local/share/fastfetch/
+```
+
+Edita el fichero `~/.zshrc`
+
+```bash
+nano ~/.zshrc
+```
+
+Para mostrar información del PC al abrir una terminal añadiendo el siguiente contenido al final
+
+```ini
+if [[ $- == *i* ]] && [[ "$TERM_PROGRAM" != "vscode" ]]; then
+	clear
+	fastfetch --config sysinfo
+fi
+```
+
+Edita `~/.config/starship.toml` para personalizar el prompt
+
+```bash
+nano ~/.config/starship.toml
+```
+
+Añade a la sección `[os.symbols]` la sección para CachyOS.
+
+```
+CachyOS = "󰣇"
+```
+
+> Es posible que no se vea el icono en GitHub
+
+Comprueba el nuevo terminal
+
+```bash
+source ~/.zshrc
+```
+
+En VSCode configura el terminal por defecto a `zsh` y la fuente a `FiraCode Nerd Font Mono` para ver los iconos. (`~/.config/Code/User/settings.json`)
+
+```json
+"terminal.integrated.defaultProfile.linux": "zsh",
+"terminal.integrated.fontFamily": "FiraCode Nerd Font Mono",
+```
+
+## Gaming
+
+```bash
+paru -S cachyos-gaming-meta steam
+```
+
+> Usa `Proton Experimental` en Steam cuando necesites compatibilidad.
+
+## Wallpaper Engine (KDE)
+
+```bash
+paru -S wallpaper-engine-kde-plugin-git
+```
+
+> Para que el plugin funcione puede ser necesario tener Wallpaper Engine instalado en Steam y activar la compatibilidad Windows 7 en las opciones del programa.
+
+Ajusta los fondos de escritorio seleccionando la opción `Wallpaper Engine for Kde` en el desplegable de Tipo de fondo
+
+Pulsa sobre `Library` para buscar la carpeta raíz de la librería de Steam. Debes seleccionar el directorio que contiene steamapps. `SteamLibrary` en este caso:
+
+```
+├── SteamLibrary
+│   ├── steamapps
+│   ├── libraryfolder.vdf
+│   └── steam.dll
+└── ...
+```
+
+Los fondos que tengas descargados en Wallpaper Engine (si está sincronizado) deberían aparecer automáticamente.
+
+> En el apartado _Settings_ puedes establecer ajustes concretos del fondo. Es recomendable usar _Display: Scale and Dropp_ para que el fondo se ajuste correctamente al escritorio.
+
+## Colores y Temas (Plasma y Kvantum)
+
+### Tema Global
+
+Instala y aplica el tema [Utterly-Nord](https://store.kde.org/p/2135625/) desde el apartado de Tema global en las preferencias.
+
+> Puedes pulsar sobre _Obtener novedades_ y buscarlo o importar el fichero [Utterly-Nord](./assets/Utterly-Nord.tar.xz)
+
+### Estilo de las Aplicaciones
+
+Instala Kvantum Manager y ábrelo
+
+```bash
+paru -S kvantum
+```
+
+Instalar / Actualizar temas
+
+Selecciona la carpeta con la extracción de [Utterly-Nord-kvantum](./assets/Utterly-Nord-kvantum.zip) y pulsa _Instalar_.
+
+> También disponible en la [tienda de KDE](https://store.kde.org/p/1905813/)
+
+Cambiar / borrar un tema
+
+Selecciona `Utterly-Nord` y pulsa _Usar este team_
+
+> Asegúrate que en el apartado de _Estilo de las aplicaciones_ esté seleccionado y aplicado el estilo _kvantum-dark_
+
+### Decoraciones de las Ventanas
+
+Instala y aplica el tema [Utterly Round Dark](https://store.kde.org/p/1901768/) desde el apartado de Decoraciones de las ventanas en las preferencias.
+
+> Puedes pulsar sobre _Obtener novedades_ y buscarlo o importar el fichero [Utterly-Round-Desktop](./assets/Utterly-Round-Desktop.tar.xz)
+
+En este mismo apartado, ajusta en la parte superior el borda a _Sin bordes de ventana_
+
+### Iconos
+
+Pulsa en _Obtener novedades_, busca el set de iconos `Tela` y selecciona y aplica el set _Tela Dark_
+
+> [!IMPORTANT]
+> Debes reiniciar el sistema para asegurar que todas las configuraciones se hayan aplicado correctamente.
+
+### WindowButtons plasmoid
+
+> [!WARNING]
+> Por ahora esto no está funcionando correctamente, así que edita los elementos gráficos de la barra superior y elimina el componente _WindowButtons_
+
+Este plasmoid sirve para mostrar los botones de la ventana (cerrar, maximizar, ...) en la barra superior.
+
+```bash
+sudo ./.local/share/plasma/plasmoids/org.kde.windowbuttons/lib-install.sh
+kwriteconfig6 --file ~/.config/kwinrc --group Windows --key BorderlessMaximizedWindows false
+qdbus6 org.kde.KWin /KWin reconfigure
+```
+
+### Fuentes (opcional)
+
+Puedes instalar las siguiente fuentes desde el menú _Gestión de tipos de letra_, pulsando sobre _Instalar desde el archivo_
+
+San Francisco Pro ([repositorio](https://github.com/sahibjotsaggu/San-Francisco-Pro-Fonts) y [assets](./assets/San-Francisco-Pro-Fonts.zip)) y SF Mono ([repositorio](https://github.com/supercomputra/SF-Mono-Font) y [assets](./assets/SF-Mono-Font.zip))
+
+```bash
+cd && sudo ./.local/share/plasma/plasmoids/org.kde.windowbuttons/lib-install.sh
+```
+
+## Fondo dinámico en inicio de sesión
+
+Instalar herramienta necesaria `xdotool`
+
+```bash
+paru -S xdotool
+```
+
+Lanzar el script de generación de fondo dinámico
+
+```bash
+chmod +x ./scripts/dynamic-login-wallpaper.sh
+./scripts/dynamic-login-wallpaper.sh
+```
+
+El script creará una imagen en `~/.dynamic-login-wallpaper/dynamic-login-wallpaper.png`. Esta imagen se establecerá como fondo desde la sección _Pantalla de inicio de sesión_.
+
+> [!TIP]
+> Cada vez que actualices el fondo de escritorio del Wallpaper Engine deberás ejecutar el script para que se actualice la imagen de fondo. La pantalla de login debería actualizarse automáticamente.
+
+## Gestión de ventanas
+
+- Activar en KWin scripts de escritorios virtuales solo en monitor principal.
+- Instalar y activar el script KWin "Remember Window Positions" para restaurar ventanas.
+
+## Vivaldi
+
+Cambia el icono de Descargas a "Barra de Direcciones" para evitar el panel lateral.
+
+En Apariencia, elige "Usar ventana nativa" para una mejor integración con KDE y el tema custom.
+
+Limpia la barra lateral dejando solo servicios de chat IA ([Copilot](https://github.com/copilot), [ChatGPT](https://chatgpt.com/c/), [Gemini](https://gemini.google.com/app?hl=es-ES)) y servicios de mensajería ([Telegram](https://web.telegram.org/k/), [WhatsApp](https://web.whatsapp.com/))
+
+> [!TIP]
+> Para que funcione WhatsApp es necesario activar el modo de visualización del panel y navegar al _home_ para que se muestre el QR de inicio de sesión
+
+## Brave
+
+Cambia en el apartado _Aspecto_ al tema QT y activa _Usar bordes y barra de título_ para mejor integración con KDE y tema custom.
+
+## Inicio Automático
+
+> [!TIP]
+> La ruta en la que se almacenan los lanzadores de inicio automático es `~/.config/autostart/`
+> Los lanzadores `*.desktop` se almacenan en `~/.local/share/applications/` o `/usr/share/applications/` si están instaladas globalmente
+
+- Editar el lanzador de Steam con `Exec=/usr/bin/steam -silent %U` para que inicie ya minimizado.
+
+## VSCode
+
+Modifica los argumentos del lanzador con el programa _Editor del menu_ para que use X11 en lugar de Wayland
+
+```text
+%F --ozone-platform=x11
+```
+
+De esta forma VSCode respetará el diseño de botones y menús y será más compatible con aplicaciones X11 (zoom-to-mouse de OBS, por ejemplo)
+
+## Emoji Picker: Pegado automático
+
+Instala `wl-clipboard` y `ydotool`:
+
+```bash
+paru -S wl-clipboard ydotool
+```
+
+Crea un nuevo servicio para `ydotoold`
+
+```bash
+mkdir -p ~/.config/systemd/user
+nano ~/.config/systemd/user/ydotoold.service
+```
+
+Con el siguiente contenido
+
+```ini
+[Unit]
+Description=ydotool daemon
+
+[Service]
+ExecStart=/usr/bin/ydotoold --socket-path=/run/user/<UID>/.ydotool_socket
+Restart=on-failure
+
+[Install]
+WantedBy=default.target
+```
+
+Lanza el nuevo servicio y comprueba su estado para verificar que esté activo
+
+```bash
+systemctl --user daemon-reload
+systemctl --user enable --now ydotoold
+systemctl --user status ydotoold
+```
+
+> [!TIP]
+> Si el servicio no arranca correctamente, cierra cualquier otra instancia previa de `ydotoold`, reinicia la sesión y vuelve a intentarlo.
+> Para obtener tu UID puedes ejecutar `id -u` en la terminal
+
+Configura un nuevo atajo _Atajos Personalizados_ que ejecute el script [emoji-picker.sh](./scripts/emoji-picker.sh).
+
+## OBS
+
+Edita los argumentos del lanzador en `~/.local/share/applications/` para dar compatibilidad con la interfaz gráfica y las fuentes necesarias
+
+```text
+__NV_DISABLE_EXPLICIT_SYNC=1, QT_QPA_PLATFORM=xcb
+```
+
+Activa el servidor WebSocket en el desplegable de Herramientas
+
+## MacroDeck
+
+En la aplicación de Bottles, accede al menú de _Importar_ y selecciona _Archivo completo_ en la esquina superior izquierda para importar el fichero [MacroDeck-backup](./assets/MacroDeck-backup.tar.gz) y restaurar la Bottle.
+
+Abre MacroDeck y configura el plugin de conexión con OBS. Debería bastar con actualizar la contraseña.
+
+Añade Macro Deck 2 al directorio de inicio automático copiando su lanzador de `~/.local/share/applications/` a `~/.config/autostart/`
+
+## Google Drive con `rclone`
+
+1. Instalar `rclone`:
+
+```bash
+paru -S rclone
+```
+
+2. Crear credenciales en Google Cloud Console (resumen paso a paso):
+
+- Ve a https://console.cloud.google.com/ y crea un proyecto nuevo (ej.: _CachyOS-rclone_).
+- En la barra de búsqueda superior, busca _Google Drive API_ y dale a _Habilitar_.
+- Ve a _Pantalla de consentimiento de OAuth_ en _APIs y servicios_, selecciona tipo de usuario _Externo_, ponle un nombre y guarda (no necesitas rellenar más datos).
+- En la sección _Usuarios de prueba_ dentro de _Público_, añade la cuenta de Gmail que vas a usar para autorizar (tu correo personal).
+- Ve a _Clientes_ y pulsa en _Crear cliente_. Selecciona tipo de aplicación: Aplicación de escritorio (Desktop app) y haz clic en Crear.
+- Copia el `Client ID` y `Client Secret` que genera Google.
+
+3. Configurar sincronización:
+
+```bash
+rclone config
+```
+
+- `n` para nuevo remoto
+- Nombre: `gdrive` (o el que prefieras).
+- Tipo de almacenamiento: selecciona `drive` (Google Drive).
+- Cuando pregunte `client_id` y `client_secret` pega los valores generados.
+- `scope`: opciones comunes:
+  - `drive`: acceso completo recomendado si quieres sincronizar todo.
+  - `drive.readonly`: solo lectura.
+  - `drive.file`: acceso limitado a archivos creados por la app.
+  - `drive.appfolder`: carpeta de aplicación dedicada.
+    Elige `drive` (1) para sincronizaciones completas.
+- `root_folder_id`: dejar en blanco salvo que quieras apuntar a un Shared Drive o carpeta concreta.
+- `service_account_file`: dejar en blanco para autenticación por OAuth.
+- `Edit advanced config?`: `n` salvo que necesites configurar proxies u opciones especiales.
+- `Use auto config?`: `y` Se abrirá el navegador y te pedirá autorización.
+- Confirma que todo está bien con `y` y sal del configurador con `q`.
+
+4. Compartido conmigo:
+
+Si tienes carpetas en _Compartido conmigo_, añádelas a _Mi unidad_ como accesos directos en la web de Google Drive antes de sincronizar. `rclone` puede tener problemas con elementos que solo están en _Compartido conmigo_ si no los conviertes en accesos directos dentro de _Mi unidad_.
+
+5. Sincronización inicial con `bisync`:
+
+```bash
+mkdir -p ~/GoogleDrive
+rclone bisync gdrive: ~/GoogleDrive \
+	--resync \
+	--drive-skip-gdocs \
+	--drive-skip-dangling-shortcuts \
+	--compare size,modtime,checksum \
+	--resilient -vP
+```
+
+Opciones usadas:
+
+- `bisync`: intenta mantener ambos lados (local y drive) en sync. Puede eliminar archivos si detecta que han sido borrados en el origen; úsalo con precaución.
+- `--resync`: fuerza una sincronización completa, útil para la primera ejecución.
+- `--drive-skip-gdocs`: evita que `rclone` trate de descargar/convertir Google Docs/Sheets/Slides nativos.
+- `--drive-skip-dangling-shortcuts`: omite accesos directos que apuntan a elementos inexistentes.
+- `--compare size,modtime,checksum`: compara por tamaño, fecha de modificación y checksum para detectar cambios con mayor fiabilidad.
+- `--resilient`: intenta continuar ante errores transitorios y reintentos.
+- `--drive-acknowledge-abuse`: ermite operar sobre ficheros marcados por Google como abuso/maliciosos; usar con precaución.
+- `-vP`: mostrar información del proceso y progreso.
+
+6. Sincronización periódica con servicio `systemd` y temporizador:
+
+Crea el script de sincronización
+
+```bash
+nano ~/.local/bin/rclone_sync.sh
+```
+
+Y añade el siguiente contenido
+
+```bash
+#!/bin/bash
+if pidof -o %PPID -x "$0"; then
+	exit 1
+fi
+
+rclone bisync gdrive: "$HOME/GoogleDrive" \
+	--drive-skip-gdocs --drive-skip-dangling-shortcuts \
+	--drive-acknowledge-abuse --compare size,modtime,checksum --resilient
+```
+
+Crea el servicio
+
+```bash
+nano ~/.config/systemd/user/rclone-sync.service
+```
+
+Y añade el siguiente contenido
+
+```ini
+[Unit]
+Description=Sincronizacion optimizada de Rclone con Google Drive
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/rclone_sync.sh
+
+[Install]
+WantedBy=default.target
+```
+
+Crea el temporizador
+
+```bash
+nano ~/.config/systemd/user/rclone-sync.timer
+```
+
+Con el siguiente contenido
+
+```ini
+[Unit]
+Description=Temporizador para la sincronizacion de Rclone
+
+[Timer]
+OnBootSec=5m
+OnUnitActiveSec=20m
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+```
+
+> Se ejecutará el script de sincronizazión cada 20 minutos, esperando 5 minutos después del inicio del sistema
+
+Activar y usar:
+
+```bash
+chmod +x ~/.local/bin/rclone_sync.sh
+systemctl --user daemon-reload
+systemctl --user enable --now rclone-sync.timer
+```
+
+> [!TIP]
+> Lista completa de los timers configurados y su próximo tiempo de ejecución: `systemctl --user list-timers --all`
+> Logs en tiempo real del proceso: `journalctl --user -u rclone-sync.service -f`
+> Forzar sincronización manual en cualquier momento: `systemctl --user start rclone-sync.service`
+
+## TeamViewer
+
+```bash
+paru -S teamviewer
+teamviewer --daemon start
+```
+
+Configurar para que se inicie automáticamente con el sistema
+Añadir el dispositivo a la cuenta para permitir conexión desatendida
+
+## GIT
+
+```bash
+git --global config user.name xxxxx
+git --global config user.email xxxxx
+```
+
+## GIT Large File Storage
+
+```bash
+paru -S git-lfs
+```
+
+```bash
+git lfs install
+```
+
+```bash
+git lfs track "*.zip"
+git lfs track "*.tar.gz"
+git lfs track "*.tar.xz"
+git add .gitattributes
+```
