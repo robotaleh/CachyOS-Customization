@@ -1,31 +1,33 @@
-# CachyOS — Mi guía de personalización y postinstalación personal
+# CachyOS — Postinstalación y Personalizazión
 
-Guía personal para preparar y personalizar un entorno CachyOS. Contiene comandos reproducibles, plantillas de `systemd` de usuario, enlaces a temas y explicaciones detalladas de opciones complejas (p. ej. `rclone`). También incluye algunos ajustes para ciertos programas especiales del entorno OPRobots y Twitch
+Guía personal para preparar y personalizar un entorno CachyOS a mi gusto. Establece un diseño de escritorio limpio y consistente, manteniendo la usabilidad. Contiene un listado de los programas que uso habitualmente y sus ajustes concretos. También se listan algunos scripts custom que me he creado para hacerme la vida más fácil y sincronizar ciertos servicios como Google Drive, OPRobots o Twitch.
 
 ## Índice
 
-- [AUR (paru) — Paquetes recomendados](#aur)
-- [FlatPak — Paquetes](#flatpak)
-- [F3D — Modo STEP y miniaturas](#f3d---modo-step-y-miniaturas)
-- [PlatformIO y STLink — reglas udev](#platformio-y-stlink---reglas-udev)
-- [Red y Firewall](#red-y-firewall)
-- [Unidades de red (FailServer)](#unidades-de-red-failserver)
-- [Particiones y otros Discos](#particiones-y-otros-discos)
+- [AUR](#aur)
+- [FlatPak](#flatpak)
 - [Personalización de Konsole y shell](#personalizacion-de-konsole-y-shell)
-- [Gaming](#gaming)
 - [Wallpaper Engine (KDE)](#wallpaper-engine-kde)
 - [Colores y Temas (Plasma y Kvantum)](#colores-y-temas-plasma-y-kvantum)
 - [Fondo dinámico en inicio de sesión](#fondo-dinamico-en-inicio-de-sesion)
 - [Gestión de ventanas](#gestion-de-ventanas)
+- [PlatformIO y STLink — reglas udev](#platformio-y-stlink---reglas-udev)
+- [Red y Firewall](#red-y-firewall)
+- [Unidades de red (FailServer)](#unidades-de-red-failserver)
+- [Particiones y otros Discos](#particiones-y-otros-discos)
+- [F3D — Modo STEP y miniaturas](#f3d---modo-step-y-miniaturas)
 - [Vivaldi](#vivaldi)
 - [Brave](#brave)
-- [Inicio Automático](#inicio-automatico)
 - [VSCode](#vscode)
 - [Emoji Picker: Pegado automático](#emoji-picker-pegado-automatico)
 - [OBS](#obs)
 - [MacroDeck](#macrodeck)
-- [Google Drive con rclone — guía completa](#google-drive-con-rclone)
+- [Google Drive con rclone](#google-drive-con-rclone)
 - [TeamViewer](#teamviewer)
+- [GIT](#git)
+- [GIT Large File System](#git-large-file-system)
+- [Gaming](#gaming)
+- [Inicio Automático](#inicio-automatico)
 
 ---
 
@@ -38,72 +40,184 @@ paru -S --sudoloop \
 	brave-bin vivaldi discord blender freecad gimp inkscape kicad mypaint \
 	qbittorrent kdenlive obs-browser obs-pipewire-audio-capture obs-3d-effect \
 	qt6-webengine vlc visual-studio-code-bin pulseview spotify bazaar jdk-openjdk \
-	archlinux-java-run stm32cubemx orca-slicer f3d zsh fastfetch cachyos-gaming-meta \ 
+	archlinux-java-run stm32cubemx orca-slicer f3d zsh fastfetch cachyos-gaming-meta \
 	steam wallpaper-engine-kde-plugin-git kvantum xdotool wl-clipboard ydotool rclone \
 	teamviewer git-lfs
 ```
 
+> [!NOTE]
 > --sudoloop: Mantiene activa la autenticación de sudo durante toda la operación
 
 Nota rápida: si `orca-slicer` falla en su versión normal, usa `orca-slicer-bin`.
 
----
-
 ## FlatPak
 
-Instalar `bottles` desde Flathub para ejecución de aplicaciones de Windows:
+Instalar `Bottles` desde Flathub para ejecución de aplicaciones de Windows:
 
 ```bash
 flatpak install flathub com.usebottles.bottles
 ```
 
----
+## Personalización de Konsole y shell
 
-## F3D — Modo STEP y miniaturas
-
-Crear un lanzador que fuerce lectura STEP:
+Instalación y configuración rápida:
 
 ```bash
-cp /usr/share/applications/f3d.desktop ~/.local/share/applications/f3d-step.desktop
-nano ~/.local/share/applications/f3d-step.desktop
+unzip -o ./assets/plasma6macos-fonts.zip -d ~/.local/share/fonts
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" -- --unattended
+git clone https://github.com/zsh-users/zsh-autosuggestions ~/.oh-my-zsh/custom/plugins/zsh-autosuggestions
+git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting
+git clone https://github.com/zsh-users/zsh-history-substring-search ~/.oh-my-zsh/custom/plugins/zsh-history-substring-search
+curl -sS https://starship.rs/install.sh | sh
+unzip -o ./assets/plasma6macos-zshstarship-konsole.zip -d ~
+mkdir -p ~/.local/share/fastfetch
+unzip -o ./assets/plasma6macos-fastfetch.zip "ascii/*" "presets/*" -d ~/.local/share/fastfetch/
 ```
 
-Dentro del `.desktop`, añade o modifica:
+Edita el fichero `~/.zshrc`
+
+```bash
+nano ~/.zshrc
+```
+
+Para mostrar información del PC al abrir una terminal añadiendo el siguiente contenido al final
 
 ```ini
-Exec=f3d --force-reader=STEP %F
-Name=F3D STEP Viewer
+if [[ $- == *i* ]] && [[ "$TERM_PROGRAM" != "vscode" ]]; then
+	clear
+	fastfetch --config sysinfo
+fi
 ```
 
-Actualizar la base de datos de aplicaciones:
+Edita `~/.config/starship.toml` para personalizar el prompt
 
 ```bash
-update-desktop-database ~/.local/share/applications
+nano ~/.config/starship.toml
 ```
 
-Miniaturas para STEP (thumbnailer):
-
-```bash
-mkdir -p ~/.local/share/thumbnailers
-cp /usr/share/thumbnailers/f3d-plugin-occt.thumbnailer ~/.local/share/thumbnailers/
-nano ~/.local/share/thumbnailers/f3d-plugin-occt.thumbnailer
-```
-
-Dentro del archivo `*.thumbnailer` ajusta `Exec=` así:
+Añade a la sección `[os.symbols]` la sección para CachyOS.
 
 ```ini
-Exec=f3d --config=thumbnail --load-plugins=occt --force-reader=STEP --verbose=quiet --output=%o --resolution=%s,%s %i
+CachyOS = "󰣇"
 ```
 
-Forzar regeneración de miniaturas y reiniciar Dolphin:
+> Es posible que no se vea el icono en GitHub
+
+Comprueba el nuevo terminal
 
 ```bash
-rm -rf ~/.cache/thumbnails/*
-kquitapp6 dolphin || true
-dolphin &
+source ~/.zshrc
 ```
 
-> Es necesario activar las miniaturas para los tipos de ficheros necesarios; en mi caso todos
+Accede a las preferencias de _Konsole_ y asegúrate que `zsh-starship` sea el _Perfil_ predeterminado
+
+En VSCode configura el terminal por defecto a `zsh` y la fuente a `FiraCode Nerd Font Mono` para ver los iconos. (`~/.config/Code/User/settings.json`)
+
+```json
+"terminal.integrated.defaultProfile.linux": "zsh",
+"terminal.integrated.fontFamily": "FiraCode Nerd Font Mono",
+```
+
+## Wallpaper Engine (KDE)
+
+> [!IMPORTANT]
+> Para que el plugin funcione puede ser necesario tener Wallpaper Engine instalado en Steam y activar la compatibilidad Windows 7 en las opciones del programa.
+
+Ajusta los fondos de escritorio seleccionando la opción `Wallpaper Engine for Kde` en el desplegable de _Tipo de fondo_
+
+Pulsa sobre `Library` para buscar la carpeta raíz de la librería de Steam. Debes seleccionar el directorio que contiene steamapps. `SteamLibrary` en este caso:
+
+```
+├── SteamLibrary
+│   ├── steamapps
+│   ├── libraryfolder.vdf
+│   └── steam.dll
+└── ...
+```
+
+Los fondos que tengas descargados en Wallpaper Engine (si está sincronizado) deberían aparecer automáticamente.
+
+> [!TIP]
+> En el apartado _Settings_ puedes establecer ajustes concretos del fondo. Es recomendable usar _Display: Scale and Dropp_ para que el fondo se ajuste correctamente al escritorio.
+
+## Colores y Temas (Plasma y Kvantum)
+
+### Tema Global
+
+Instala y aplica el tema [Utterly-Nord](https://store.kde.org/p/2135625/) desde el apartado de Tema global en las preferencias.
+
+> [!TIP]
+> Puedes pulsar sobre _Obtener novedades_ y buscarlo o importar el fichero [Utterly-Nord](./assets/Utterly-Nord.tar.xz)
+
+### Kvantum Manager: Estilo de las Aplicaciones
+
+En el apartado _Instalar / Actualizar temas_, selecciona la carpeta con la extracción de [Utterly-Nord-kvantum](./assets/Utterly-Nord-kvantum.zip) y pulsa _Instalar_.
+
+> [!TIP]
+> También disponible en la [tienda de KDE](https://store.kde.org/p/1905813/)
+
+En el apartado _Cambiar / borrar un tema_, selecciona `Utterly-Nord` y pulsa _Usar este team_
+
+> [!IMPORTANT]
+> Asegúrate que en el apartado de _Estilo de las aplicaciones_ esté seleccionado y aplicado el estilo _kvantum-dark_
+
+### Decoraciones de las Ventanas
+
+Instala y aplica el tema [Utterly Round Dark](https://store.kde.org/p/1901768/) desde el apartado de Decoraciones de las ventanas en las preferencias.
+
+En este mismo apartado, ajusta en la parte superior el borda a _Sin bordes de ventana_
+
+> [!TIP]
+> Puedes pulsar sobre _Obtener novedades_ y buscarlo o importar el fichero [Utterly-Round-Desktop](./assets/Utterly-Round-Desktop.tar.xz)
+
+### Iconos
+
+Pulsa en _Obtener novedades_, busca el set de iconos `Tela` y selecciona y aplica el set _Tela Dark_
+
+> [!IMPORTANT]
+> En este punto, debes reiniciar el sistema para asegurar que todas las configuraciones se hayan aplicado correctamente.
+
+### WindowButtons plasmoid
+
+> [!WARNING]
+> Por ahora esto no está funcionando correctamente, así que edita los elementos gráficos de la barra superior y elimina el componente _WindowButtons_
+
+Este plasmoid sirve para mostrar los botones de la ventana (cerrar, maximizar, ...) en la barra superior.
+
+```bash
+sudo ./.local/share/plasma/plasmoids/org.kde.windowbuttons/lib-install.sh
+kwriteconfig6 --file ~/.config/kwinrc --group Windows --key BorderlessMaximizedWindows false
+qdbus6 org.kde.KWin /KWin reconfigure
+```
+
+### Fuentes (opcional)
+
+Puedes instalar las siguiente fuentes desde el menú _Gestión de tipos de letra_, pulsando sobre _Instalar desde el archivo_
+
+San Francisco Pro ([repositorio](https://github.com/sahibjotsaggu/San-Francisco-Pro-Fonts) y [assets](./assets/San-Francisco-Pro-Fonts.zip)) y SF Mono ([repositorio](https://github.com/supercomputra/SF-Mono-Font) y [assets](./assets/SF-Mono-Font.zip))
+
+```bash
+cd && sudo ./.local/share/plasma/plasmoids/org.kde.windowbuttons/lib-install.sh
+```
+
+## Fondo dinámico en inicio de sesión
+
+Lanzar el script de generación de fondo dinámico
+
+```bash
+chmod +x ./scripts/dynamic-login-wallpaper.sh
+./scripts/dynamic-login-wallpaper.sh
+```
+
+El script creará una imagen en `~/.dynamic-login-wallpaper/dynamic-login-wallpaper.png`. Esta imagen se establecerá como fondo desde la sección _Pantalla de inicio de sesión_.
+
+> [!TIP]
+> Cada vez que actualices el fondo de escritorio del Wallpaper Engine deberás ejecutar el script para que se actualice la imagen de fondo. La pantalla de login debería actualizarse automáticamente.
+
+## Gestión de ventanas
+
+- Activar en KWin scripts de escritorios virtuales solo en monitor principal.
+- Instalar y activar el script KWin "Remember Window Positions" para restaurar ventanas.
 
 ## PlatformIO y STLink — reglas udev
 
@@ -121,7 +235,7 @@ ST-Link:
 sudo nano /etc/udev/rules.d/49-stlink-udev.rules
 ```
 
-Añadir el siguiente contenido al fichero.
+Añadir el siguiente contenido al fichero:
 
 ```ini
 # ST-Link V2
@@ -137,7 +251,8 @@ ATTRS{idVendor}=="0483", ATTRS{idProduct}=="3752", MODE="0666"
 ATTRS{idVendor}=="0483", ATTRS{idProduct}=="374f", MODE="0666"
 ```
 
-> Es posible que haya dispositivos con diferente _idVendor_ o _idProduct_
+> [!NOTE]
+> Es posible que haya dispositivos ST-Link con diferente _idVendor_ o _idProduct_
 
 Recargar reglas tras editar:
 
@@ -153,8 +268,6 @@ Abrir puerto para MacroDeck (TCP 8191):
 ```bash
 sudo ufw allow 8191/tcp
 ```
-
----
 
 ## Unidades de red (FailServer)
 
@@ -200,198 +313,74 @@ Verificar montajes antes de reiniciar:
 sudo mount -a
 ```
 
+> [!IMPORTANT]
 > Si reinicias sin comprobar si no hay errores, puede que el sistema entre en "modo emergencia"
 
-## Personalización de Konsole y shell
+## F3D — Modo STEP y miniaturas
 
-Instalación y configuración rápida:
-
-```bash
-unzip -o ./assets/plasma6macos-fonts.zip -d ~/.local/share/fonts
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" -- --unattended
-git clone https://github.com/zsh-users/zsh-autosuggestions ~/.oh-my-zsh/custom/plugins/zsh-autosuggestions
-git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting
-git clone https://github.com/zsh-users/zsh-history-substring-search ~/.oh-my-zsh/custom/plugins/zsh-history-substring-search
-curl -sS https://starship.rs/install.sh | sh
-unzip -o ./assets/plasma6macos-zshstarship-konsole.zip -d ~
-mkdir -p ~/.local/share/fastfetch
-unzip -o ./assets/plasma6macos-fastfetch.zip "ascii/*" "presets/*" -d ~/.local/share/fastfetch/
-```
-
-Edita el fichero `~/.zshrc`
+Crear un lanzador que fuerce lectura STEP:
 
 ```bash
-nano ~/.zshrc
+cp /usr/share/applications/f3d.desktop ~/.local/share/applications/f3d-step.desktop
+nano ~/.local/share/applications/f3d-step.desktop
 ```
 
-Para mostrar información del PC al abrir una terminal añadiendo el siguiente contenido al final
+Dentro del `.desktop`, añade o modifica:
 
 ```ini
-if [[ $- == *i* ]] && [[ "$TERM_PROGRAM" != "vscode" ]]; then
-	clear
-	fastfetch --config sysinfo
-fi
+Exec=f3d --force-reader=STEP %F
+Name=F3D STEP Viewer
 ```
 
-Edita `~/.config/starship.toml` para personalizar el prompt
+Actualizar la base de datos de aplicaciones:
 
 ```bash
-nano ~/.config/starship.toml
+update-desktop-database ~/.local/share/applications
 ```
 
-Añade a la sección `[os.symbols]` la sección para CachyOS.
-
-```
-CachyOS = "󰣇"
-```
-
-> Es posible que no se vea el icono en GitHub
-
-Comprueba el nuevo terminal
+Miniaturas para STEP (thumbnailer):
 
 ```bash
-source ~/.zshrc
+mkdir -p ~/.local/share/thumbnailers
+cp /usr/share/thumbnailers/f3d-plugin-occt.thumbnailer ~/.local/share/thumbnailers/
+nano ~/.local/share/thumbnailers/f3d-plugin-occt.thumbnailer
 ```
 
-En VSCode configura el terminal por defecto a `zsh` y la fuente a `FiraCode Nerd Font Mono` para ver los iconos. (`~/.config/Code/User/settings.json`)
+Dentro del archivo `*.thumbnailer` ajusta `Exec=` así:
 
-```json
-"terminal.integrated.defaultProfile.linux": "zsh",
-"terminal.integrated.fontFamily": "FiraCode Nerd Font Mono",
+```ini
+Exec=f3d --config=thumbnail --load-plugins=occt --force-reader=STEP --verbose=quiet --output=%o --resolution=%s,%s %i
 ```
 
-## Gaming
-
-Usa `Proton Experimental` en Steam cuando necesites compatibilidad.
-
-## Wallpaper Engine (KDE)
-
-> [!IMPORTANT]
-> Para que el plugin funcione puede ser necesario tener Wallpaper Engine instalado en Steam y activar la compatibilidad Windows 7 en las opciones del programa.
-
-Ajusta los fondos de escritorio seleccionando la opción `Wallpaper Engine for Kde` en el desplegable de Tipo de fondo
-
-Pulsa sobre `Library` para buscar la carpeta raíz de la librería de Steam. Debes seleccionar el directorio que contiene steamapps. `SteamLibrary` en este caso:
-
-```
-├── SteamLibrary
-│   ├── steamapps
-│   ├── libraryfolder.vdf
-│   └── steam.dll
-└── ...
-```
-
-Los fondos que tengas descargados en Wallpaper Engine (si está sincronizado) deberían aparecer automáticamente.
-
-> En el apartado _Settings_ puedes establecer ajustes concretos del fondo. Es recomendable usar _Display: Scale and Dropp_ para que el fondo se ajuste correctamente al escritorio.
-
-## Colores y Temas (Plasma y Kvantum)
-
-### Tema Global
-
-Instala y aplica el tema [Utterly-Nord](https://store.kde.org/p/2135625/) desde el apartado de Tema global en las preferencias.
-
-> Puedes pulsar sobre _Obtener novedades_ y buscarlo o importar el fichero [Utterly-Nord](./assets/Utterly-Nord.tar.xz)
-
-### Kvantum Manager: Estilo de las Aplicaciones
-
-Instalar / Actualizar temas
-
-Selecciona la carpeta con la extracción de [Utterly-Nord-kvantum](./assets/Utterly-Nord-kvantum.zip) y pulsa _Instalar_.
-
-> También disponible en la [tienda de KDE](https://store.kde.org/p/1905813/)
-
-Cambiar / borrar un tema
-
-Selecciona `Utterly-Nord` y pulsa _Usar este team_
-
-> Asegúrate que en el apartado de _Estilo de las aplicaciones_ esté seleccionado y aplicado el estilo _kvantum-dark_
-
-### Decoraciones de las Ventanas
-
-Instala y aplica el tema [Utterly Round Dark](https://store.kde.org/p/1901768/) desde el apartado de Decoraciones de las ventanas en las preferencias.
-
-> Puedes pulsar sobre _Obtener novedades_ y buscarlo o importar el fichero [Utterly-Round-Desktop](./assets/Utterly-Round-Desktop.tar.xz)
-
-En este mismo apartado, ajusta en la parte superior el borda a _Sin bordes de ventana_
-
-### Iconos
-
-Pulsa en _Obtener novedades_, busca el set de iconos `Tela` y selecciona y aplica el set _Tela Dark_
-
-> [!IMPORTANT]
-> Debes reiniciar el sistema para asegurar que todas las configuraciones se hayan aplicado correctamente.
-
-### WindowButtons plasmoid
-
-> [!WARNING]
-> Por ahora esto no está funcionando correctamente, así que edita los elementos gráficos de la barra superior y elimina el componente _WindowButtons_
-
-Este plasmoid sirve para mostrar los botones de la ventana (cerrar, maximizar, ...) en la barra superior.
+Forzar regeneración de miniaturas y reiniciar Dolphin:
 
 ```bash
-sudo ./.local/share/plasma/plasmoids/org.kde.windowbuttons/lib-install.sh
-kwriteconfig6 --file ~/.config/kwinrc --group Windows --key BorderlessMaximizedWindows false
-qdbus6 org.kde.KWin /KWin reconfigure
+rm -rf ~/.cache/thumbnails/*
+kquitapp6 dolphin || true
+dolphin &
 ```
 
-### Fuentes (opcional)
-
-Puedes instalar las siguiente fuentes desde el menú _Gestión de tipos de letra_, pulsando sobre _Instalar desde el archivo_
-
-San Francisco Pro ([repositorio](https://github.com/sahibjotsaggu/San-Francisco-Pro-Fonts) y [assets](./assets/San-Francisco-Pro-Fonts.zip)) y SF Mono ([repositorio](https://github.com/supercomputra/SF-Mono-Font) y [assets](./assets/SF-Mono-Font.zip))
-
-```bash
-cd && sudo ./.local/share/plasma/plasmoids/org.kde.windowbuttons/lib-install.sh
-```
-
-## Fondo dinámico en inicio de sesión
-
-Lanzar el script de generación de fondo dinámico
-
-```bash
-chmod +x ./scripts/dynamic-login-wallpaper.sh
-./scripts/dynamic-login-wallpaper.sh
-```
-
-El script creará una imagen en `~/.dynamic-login-wallpaper/dynamic-login-wallpaper.png`. Esta imagen se establecerá como fondo desde la sección _Pantalla de inicio de sesión_.
-
-> [!TIP]
-> Cada vez que actualices el fondo de escritorio del Wallpaper Engine deberás ejecutar el script para que se actualice la imagen de fondo. La pantalla de login debería actualizarse automáticamente.
-
-## Gestión de ventanas
-
-- Activar en KWin scripts de escritorios virtuales solo en monitor principal.
-- Instalar y activar el script KWin "Remember Window Positions" para restaurar ventanas.
+> [!NOTE]
+> Es necesario activar las miniaturas para los tipos de ficheros necesarios; en mi caso todos
 
 ## Vivaldi
 
-Cambia el icono de Descargas a "Barra de Direcciones" para evitar el panel lateral.
-
-En Apariencia, elige "Usar ventana nativa" para una mejor integración con KDE y el tema custom.
-
-Limpia la barra lateral dejando solo servicios de chat IA ([Copilot](https://github.com/copilot), [ChatGPT](https://chatgpt.com/c/), [Gemini](https://gemini.google.com/app?hl=es-ES)) y servicios de mensajería ([Telegram](https://web.telegram.org/k/), [WhatsApp](https://web.whatsapp.com/))
+- Cambia el icono de Descargas a "Barra de Direcciones" para evitar el panel lateral.
+- En Apariencia, elige "Usar ventana nativa" para una mejor integración con KDE y el tema custom.
+- Limpia la barra lateral dejando solo servicios de chat IA ([Copilot](https://github.com/copilot), [ChatGPT](https://chatgpt.com/c/), [Gemini](https://gemini.google.com/app?hl=es-ES)) y servicios de mensajería ([Telegram](https://web.telegram.org/k/), [WhatsApp](https://web.whatsapp.com/))
 
 > [!TIP]
 > Para que funcione WhatsApp es necesario activar el modo de visualización del panel y navegar al _home_ para que se muestre el QR de inicio de sesión
 
 ## Brave
 
-Cambia en el apartado _Aspecto_ al tema QT y activa _Usar bordes y barra de título_ para mejor integración con KDE y tema custom.
-
-## Inicio Automático
-
-> [!TIP]
-> La ruta en la que se almacenan los lanzadores de inicio automático es `~/.config/autostart/`
-> Los lanzadores `*.desktop` se almacenan en `~/.local/share/applications/` o `/usr/share/applications/` si están instaladas globalmente
-
-- Editar el lanzador de Steam con `Exec=/usr/bin/steam -silent %U` para que inicie ya minimizado.
+- Cambia en el apartado _Aspecto_ al tema QT y activa _Usar bordes y barra de título_ para mejor integración con KDE y tema custom.
 
 ## VSCode
 
 Modifica los argumentos del lanzador con el programa _Editor del menu_ para que use X11 en lugar de Wayland
 
-```text
+```ini
 %F --ozone-platform=x11
 ```
 
@@ -438,7 +427,7 @@ Configura un nuevo atajo _Atajos Personalizados_ que ejecute el script [emoji-pi
 
 Edita los argumentos del lanzador en `~/.local/share/applications/` para dar compatibilidad con la interfaz gráfica y las fuentes necesarias
 
-```text
+```ini
 __NV_DISABLE_EXPLICIT_SYNC=1, QT_QPA_PLATFORM=xcb
 ```
 
@@ -592,14 +581,19 @@ systemctl --user enable --now rclone-sync.timer
 
 ## TeamViewer
 
+Inicia el proceso en segundo plano
+
 ```bash
 teamviewer --daemon start
 ```
 
-Configurar para que se inicie automáticamente con el sistema
-Añadir el dispositivo a la cuenta para permitir conexión desatendida
+Configúralo para que se inicie automáticamente con el sistema
+
+Añade el dispositivo a la cuenta para permitir conexión desatendida
 
 ## GIT
+
+Configura tu usuario y correo electrónico para GIT
 
 ```bash
 git --global config user.name xxxxx
@@ -608,9 +602,13 @@ git --global config user.email xxxxx
 
 ## GIT Large File Storage
 
+Inicia _lfs_ en el directorio de git que necesites
+
 ```bash
 git lfs install
 ```
+
+Añade todos los tipos de fichero que quieras gestionar por LFS y añade `.gitattributes` al control de versiones
 
 ```bash
 git lfs track "*.zip"
@@ -618,3 +616,15 @@ git lfs track "*.tar.gz"
 git lfs track "*.tar.xz"
 git add .gitattributes
 ```
+
+## Gaming
+
+Usa `Proton Experimental` en Steam cuando necesites compatibilidad.
+
+## Inicio Automático
+
+> [!TIP]
+> La ruta en la que se almacenan los lanzadores de inicio automático es `~/.config/autostart/`
+> Los lanzadores `*.desktop` se almacenan en `~/.local/share/applications/` o `/usr/share/applications/` si están instaladas globalmente
+
+Editar el lanzador de Steam con `Exec=/usr/bin/steam -silent %U` para que inicie ya minimizado.
