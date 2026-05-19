@@ -39,10 +39,10 @@ Instala los paquetes listados desde AUR con `paru -S`:
 paru -S --sudoloop \
 	brave-bin vivaldi discord blender freecad gimp inkscape kicad mypaint \
 	qbittorrent kdenlive obs-browser obs-pipewire-audio-capture obs-3d-effect \
-	qt6-webengine vlc visual-studio-code-bin pulseview spotify bazaar jdk-openjdk \
-	archlinux-java-run stm32cubemx orca-slicer f3d zsh fastfetch cachyos-gaming-meta \
-	steam wallpaper-engine-kde-plugin-git kvantum xdotool wl-clipboard ydotool rclone \
-	teamviewer git-lfs
+	obs-transition-table qt6-webengine vlc visual-studio-code-bin pulseview spotify \
+	bazaar jdk-openjdk archlinux-java-run stm32cubemx orca-slicer f3d zsh fastfetch \
+	cachyos-gaming-meta \ steam wallpaper-engine-kde-plugin-git kvantum xdotool \
+	wl-clipboard ydotool rclone teamviewer git-lfs
 ```
 
 > [!NOTE]
