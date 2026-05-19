@@ -38,7 +38,9 @@ paru -S --sudoloop \
 	brave-bin vivaldi discord blender freecad gimp inkscape kicad mypaint \
 	qbittorrent kdenlive obs-browser obs-pipewire-audio-capture obs-3d-effect \
 	qt6-webengine vlc visual-studio-code-bin pulseview spotify bazaar jdk-openjdk \
-	archlinux-java-run stm32cubemx orca-slicer f3d
+	archlinux-java-run stm32cubemx orca-slicer f3d zsh fastfetch cachyos-gaming-meta \ 
+	steam wallpaper-engine-kde-plugin-git kvantum xdotool wl-clipboard ydotool rclone \
+	teamviewer git-lfs
 ```
 
 > --sudoloop: Mantiene activa la autenticación de sudo durante toda la operación
@@ -206,14 +208,12 @@ Instalación y configuración rápida:
 
 ```bash
 unzip -o ./assets/plasma6macos-fonts.zip -d ~/.local/share/fonts
-paru -S zsh
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" -- --unattended
 git clone https://github.com/zsh-users/zsh-autosuggestions ~/.oh-my-zsh/custom/plugins/zsh-autosuggestions
 git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting
 git clone https://github.com/zsh-users/zsh-history-substring-search ~/.oh-my-zsh/custom/plugins/zsh-history-substring-search
 curl -sS https://starship.rs/install.sh | sh
 unzip -o ./assets/plasma6macos-zshstarship-konsole.zip -d ~
-paru -S fastfetch
 mkdir -p ~/.local/share/fastfetch
 unzip -o ./assets/plasma6macos-fastfetch.zip "ascii/*" "presets/*" -d ~/.local/share/fastfetch/
 ```
@@ -262,18 +262,11 @@ En VSCode configura el terminal por defecto a `zsh` y la fuente a `FiraCode Nerd
 
 ## Gaming
 
-```bash
-paru -S cachyos-gaming-meta steam
-```
-
-> Usa `Proton Experimental` en Steam cuando necesites compatibilidad.
+Usa `Proton Experimental` en Steam cuando necesites compatibilidad.
 
 ## Wallpaper Engine (KDE)
 
-```bash
-paru -S wallpaper-engine-kde-plugin-git
-```
-
+> [!IMPORTANT]
 > Para que el plugin funcione puede ser necesario tener Wallpaper Engine instalado en Steam y activar la compatibilidad Windows 7 en las opciones del programa.
 
 Ajusta los fondos de escritorio seleccionando la opción `Wallpaper Engine for Kde` en el desplegable de Tipo de fondo
@@ -300,13 +293,7 @@ Instala y aplica el tema [Utterly-Nord](https://store.kde.org/p/2135625/) desde 
 
 > Puedes pulsar sobre _Obtener novedades_ y buscarlo o importar el fichero [Utterly-Nord](./assets/Utterly-Nord.tar.xz)
 
-### Estilo de las Aplicaciones
-
-Instala Kvantum Manager y ábrelo
-
-```bash
-paru -S kvantum
-```
+### Kvantum Manager: Estilo de las Aplicaciones
 
 Instalar / Actualizar temas
 
@@ -360,12 +347,6 @@ cd && sudo ./.local/share/plasma/plasmoids/org.kde.windowbuttons/lib-install.sh
 
 ## Fondo dinámico en inicio de sesión
 
-Instalar herramienta necesaria `xdotool`
-
-```bash
-paru -S xdotool
-```
-
 Lanzar el script de generación de fondo dinámico
 
 ```bash
@@ -417,12 +398,6 @@ Modifica los argumentos del lanzador con el programa _Editor del menu_ para que 
 De esta forma VSCode respetará el diseño de botones y menús y será más compatible con aplicaciones X11 (zoom-to-mouse de OBS, por ejemplo)
 
 ## Emoji Picker: Pegado automático
-
-Instala `wl-clipboard` y `ydotool`:
-
-```bash
-paru -S wl-clipboard ydotool
-```
 
 Crea un nuevo servicio para `ydotoold`
 
@@ -479,13 +454,7 @@ Añade Macro Deck 2 al directorio de inicio automático copiando su lanzador de 
 
 ## Google Drive con `rclone`
 
-1. Instalar `rclone`:
-
-```bash
-paru -S rclone
-```
-
-2. Crear credenciales en Google Cloud Console (resumen paso a paso):
+1. Crear credenciales en Google Cloud Console (resumen paso a paso):
 
 - Ve a https://console.cloud.google.com/ y crea un proyecto nuevo (ej.: _CachyOS-rclone_).
 - En la barra de búsqueda superior, busca _Google Drive API_ y dale a _Habilitar_.
@@ -494,7 +463,7 @@ paru -S rclone
 - Ve a _Clientes_ y pulsa en _Crear cliente_. Selecciona tipo de aplicación: Aplicación de escritorio (Desktop app) y haz clic en Crear.
 - Copia el `Client ID` y `Client Secret` que genera Google.
 
-3. Configurar sincronización:
+2. Configurar sincronización:
 
 ```bash
 rclone config
@@ -516,11 +485,11 @@ rclone config
 - `Use auto config?`: `y` Se abrirá el navegador y te pedirá autorización.
 - Confirma que todo está bien con `y` y sal del configurador con `q`.
 
-4. Compartido conmigo:
+3. Compartido conmigo:
 
 Si tienes carpetas en _Compartido conmigo_, añádelas a _Mi unidad_ como accesos directos en la web de Google Drive antes de sincronizar. `rclone` puede tener problemas con elementos que solo están en _Compartido conmigo_ si no los conviertes en accesos directos dentro de _Mi unidad_.
 
-5. Sincronización inicial con `bisync`:
+4. Sincronización inicial con `bisync`:
 
 ```bash
 mkdir -p ~/GoogleDrive
@@ -543,7 +512,7 @@ Opciones usadas:
 - `--drive-acknowledge-abuse`: ermite operar sobre ficheros marcados por Google como abuso/maliciosos; usar con precaución.
 - `-vP`: mostrar información del proceso y progreso.
 
-6. Sincronización periódica con servicio `systemd` y temporizador:
+5. Sincronización periódica con servicio `systemd` y temporizador:
 
 Crea el script de sincronización
 
@@ -624,7 +593,6 @@ systemctl --user enable --now rclone-sync.timer
 ## TeamViewer
 
 ```bash
-paru -S teamviewer
 teamviewer --daemon start
 ```
 
@@ -639,10 +607,6 @@ git --global config user.email xxxxx
 ```
 
 ## GIT Large File Storage
-
-```bash
-paru -S git-lfs
-```
 
 ```bash
 git lfs install
