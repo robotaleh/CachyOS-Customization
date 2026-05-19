@@ -23,6 +23,8 @@ Guía personal para preparar y personalizar un entorno CachyOS a mi gusto. Estab
 - [OBS](#obs)
 - [MacroDeck](#macrodeck)
 - [Google Drive con rclone](#google-drive-con-rclone)
+- [BLHeliSuite](#blhelisuite)
+- [Google Drive con rclone](#google-drive-con-rclone)
 - [TeamViewer](#teamviewer)
 - [GIT](#git)
 - [GIT Large File System](#git-large-file-system)
@@ -440,6 +442,46 @@ En la aplicación de Bottles, accede al menú de _Importar_ y selecciona _Archiv
 Abre MacroDeck y configura el plugin de conexión con OBS. Debería bastar con actualizar la contraseña.
 
 Añade Macro Deck 2 al directorio de inicio automático copiando su lanzador de `~/.local/share/applications/` a `~/.config/autostart/`
+
+## BLHeliSuite
+
+En la aplicación de Bottles, accede al menú de _Importar_ y selecciona _Archivo completo_ en la esquina superior izquierda para importar el fichero [BLHeliSuite-backup](./assets/BLHeliSuite-backup.tar.gz) y restaurar la Bottle.
+
+Crea un nuevo lanzador para la Bottle de BLHeliSuite
+
+```bash
+nano ~/.local/share/applications/blhelisuite.desktop
+```
+
+Con el siguiente contenido:
+
+```ini
+[Desktop Entry]
+Comment=Launch BLHeliSuite using Bottles (update COM ports if needed).
+Exec="$HOME/Scripts/CachyOS Customization/scripts/blheli-suite-port-sharing.sh"
+Icon="$HOME/.var/app/com.usebottles.bottles/data/bottles/bottles/BLHeli-Suite/icons/icon_promo.png"
+Name=BLHeliSuite
+NoDisplay=false
+Path=
+PrefersNonDefaultGPU=false
+StartupNotify=true
+StartupWMClass=BLHeliSuite
+Terminal=false
+TryExec=/var/lib/flatpak/exports/bin/com.usebottles.bottles
+Type=Application
+X-Flatpak=com.usebottles.bottles
+X-KDE-SubstituteUID=false
+```
+
+Actualiza la base de datos de aplicaciones para que el nuevo lanzador esté disponible
+
+```bash
+update-desktop-database ~/.local/share/applications
+```
+
+> [!NOTE]
+> Asegúrate de que el script `blheli-suite-port-sharing.sh` tenga permisos de ejecución (`chmod +x blheli-suite-port-sharing.sh`).
+> Es posible que sea necesario actualizar la ruta de la imagen del icono para usar ruta absoluta sin variable de entorno `$HOME` para que se muestre correctamente en el lanzador.
 
 ## Google Drive con `rclone`
 
