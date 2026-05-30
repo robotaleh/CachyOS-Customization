@@ -29,6 +29,7 @@ Guía personal para preparar y personalizar un entorno CachyOS a mi gusto. Estab
 - [GIT](#git)
 - [GIT Large File System](#git-large-file-system)
 - [Gaming](#gaming)
+- [Solución de Problemas](#solucion-de-problemas)
 - [Inicio Automático](#inicio-automatico)
 
 ---
@@ -44,7 +45,8 @@ paru -S --sudoloop \
 	obs-transition-table qt6-webengine vlc visual-studio-code-bin pulseview spotify \
 	bazaar jdk-openjdk archlinux-java-run stm32cubemx orca-slicer f3d zsh fastfetch \
 	cachyos-gaming-meta \ steam wallpaper-engine-kde-plugin-git kvantum xdotool \
-	wl-clipboard ydotool rclone teamviewer git-lfs
+	wl-clipboard ydotool rclone teamviewer git-lfs expresslrs-configurator-bin \
+	prismlauncher
 ```
 
 > [!NOTE]
@@ -383,8 +385,11 @@ dolphin &
 Modifica los argumentos del lanzador con el programa _Editor del menu_ para que use X11 en lugar de Wayland
 
 ```ini
-%F --ozone-platform=x11
+--enable-features=UseOzonePlatform --ozone-platform=x11 %F
 ```
+
+> [!TIP]
+> Edita directamente el lanzador de `/usr/share/applications/code.desktop` para aplicar los cambios también a la acción "Abrir nueva ventana"
 
 De esta forma VSCode respetará el diseño de botones y menús y será más compatible con aplicaciones X11 (zoom-to-mouse de OBS, por ejemplo)
 
@@ -640,6 +645,7 @@ Configura tu usuario y correo electrónico para GIT
 ```bash
 git --global config user.name xxxxx
 git --global config user.email xxxxx
+git config --global init.defaultBranch main
 ```
 
 ## GIT Large File Storage
@@ -662,6 +668,22 @@ git add .gitattributes
 ## Gaming
 
 Usa `Proton Experimental` en Steam cuando necesites compatibilidad.
+
+## Solución de Problemas
+
+### Conflicto de plugins en CachyUpdate (vlc-plugin-lua vs vlc-plugin-luajit)
+
+Durante una actualización del sistema puede aparecer un conflicto entre `vlc-plugin-lua` y `vlc-plugin-luajit` que impide continuar con el update ni desinstalar el paquete en conflicto de forma normal.
+
+La solución es eliminar el paquete conflictivo ignorando las dependencias y luego continuar con la actualización:
+
+```bash
+sudo pacman -Rdd vlc-plugin-luajit
+sudo pacman -Syu
+```
+
+> [!WARNING]
+> El flag `-dd` omite la comprobación de dependencias al desinstalar. Úsalo solo cuando sea estrictamente necesario y tengas claro qué paquete está causando el conflicto.
 
 ## Inicio Automático
 
