@@ -20,6 +20,7 @@ Guía personal para preparar y personalizar un entorno CachyOS a mi gusto. Estab
 - [Brave](#brave)
 - [VSCode](#vscode)
 - [Emoji Picker: Pegado automático](#emoji-picker-pegado-automatico)
+- [Gestos de ratón](#gestos-de-raton)
 - [OBS](#obs)
 - [MacroDeck](#macrodeck)
 - [Google Drive con rclone](#google-drive-con-rclone)
@@ -429,6 +430,20 @@ systemctl --user status ydotoold
 > Para obtener tu UID puedes ejecutar `id -u` en la terminal
 
 Configura un nuevo atajo _Atajos Personalizados_ que ejecute el script [emoji-picker.sh](./scripts/emoji-picker.sh).
+
+## Gestos de ratón
+
+Daemon que convierte gestos del ratón en atajos de teclado de KDE Plasma, usando los botones laterales **Adelante** y **Atrás** como modificadores. Los botones siguen funcionando con normalidad cuando no activan un gesto.
+
+| Gesto | Acción |
+|---|---|
+| Mantener **Adelante** (≥ 0,4 s) | Captura de pantalla (selección de región) |
+| **Atrás** + mover **arriba** | Mosaico de ventanas del escritorio actual |
+| **Atrás** + mover **abajo** | Preview de todos los escritorios virtuales |
+| **Atrás** + mover **derecha** | Escritorio virtual anterior |
+| **Atrás** + mover **izquierda** | Escritorio virtual siguiente |
+
+Consulta la [guía completa de instalación y uso](./scripts/mouse-gestures/README.md).
 
 ## OBS
 

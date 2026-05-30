@@ -1,0 +1,25 @@
+[Unit]
+Description=Mouse Gesture Shortcuts (KDE Plasma / Wayland)
+Documentation=https://github.com/robotaleh/CachyOS-Customization
+# Arrancar después de que la sesión gráfica esté disponible
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/mouse-gesture-shortcuts
+Environment=PYTHONUNBUFFERED=1
+
+# Ajuste de sensibilidad (descomenta y modifica si lo necesitas):
+# Environment=MGS_HOLD_TIME=0.4
+# Environment=MGS_MOVE_THRESHOLD=80
+
+# Dispositivo específico (auto-detectado si no se indica):
+# Environment=MOUSE_DEVICE=/dev/input/event5
+
+# Reinicio automático si el daemon falla (p.ej. ratón desconectado)
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=graphical-session.target
