@@ -6,21 +6,21 @@ Guía personal para preparar y personalizar un entorno CachyOS a mi gusto. Estab
 
 - [AUR](#aur)
 - [FlatPak](#flatpak)
-- [Personalización de Konsole y shell](#personalizacion-de-konsole-y-shell)
+- [Personalización de Konsole y shell](#personalización-de-konsole-y-shell)
 - [Wallpaper Engine (KDE)](#wallpaper-engine-kde)
 - [Colores y Temas (Plasma y Kvantum)](#colores-y-temas-plasma-y-kvantum)
-- [Fondo dinámico en inicio de sesión](#fondo-dinamico-en-inicio-de-sesion)
-- [Gestión de ventanas](#gestion-de-ventanas)
-- [PlatformIO y STLink — reglas udev](#platformio-y-stlink---reglas-udev)
+- [Fondo dinámico en inicio de sesión](#fondo-dinámico-en-inicio-de-sesión)
+- [Gestión de ventanas](#gestión-de-ventanas)
+- [PlatformIO y STLink — reglas udev](#platformio-y-stlink--reglas-udev)
 - [Red y Firewall](#red-y-firewall)
 - [Unidades de red (FailServer)](#unidades-de-red-failserver)
 - [Particiones y otros Discos](#particiones-y-otros-discos)
-- [F3D — Modo STEP y miniaturas](#f3d---modo-step-y-miniaturas)
+- [F3D — Modo STEP y miniaturas](#f3d--modo-step-y-miniaturas)
 - [Vivaldi](#vivaldi)
 - [Brave](#brave)
 - [VSCode](#vscode)
-- [Emoji Picker: Pegado automático](#emoji-picker-pegado-automatico)
-- [Gestos de ratón](#gestos-de-raton)
+- [Emoji Picker: Pegado automático](#emoji-picker-pegado-automático)
+- [Gestos de ratón](#gestos-de-ratón)
 - [OBS](#obs)
 - [MacroDeck](#macrodeck)
 - [Google Drive con rclone](#google-drive-con-rclone)
@@ -28,10 +28,10 @@ Guía personal para preparar y personalizar un entorno CachyOS a mi gusto. Estab
 - [Google Drive con rclone](#google-drive-con-rclone)
 - [TeamViewer](#teamviewer)
 - [GIT](#git)
-- [GIT Large File System](#git-large-file-system)
+- [GIT Large File Storage](#git-large-file-storage)
 - [Gaming](#gaming)
-- [Solución de Problemas](#solucion-de-problemas)
-- [Inicio Automático](#inicio-automatico)
+- [Solución de Problemas](#solución-de-problemas)
+- [Inicio Automático](#inicio-automático)
 
 ---
 
@@ -223,6 +223,22 @@ El script creará una imagen en `~/.dynamic-login-wallpaper/dynamic-login-wallpa
 
 - Activar en KWin scripts de escritorios virtuales solo en monitor principal.
 - Instalar y activar el script KWin "Remember Window Positions" para restaurar ventanas.
+
+### Atajos personalizados
+
+En _Preferencias > Atajos de Teclado > Gestión de Ventanas_ configura los siguientes atajos:
+
+| Acción | Atajo |
+|---|---|
+| Mover ventana al centro | `Ctrl + Meta + C` |
+| Mover ventana mosaico superior derecho | `Ctrl + Meta + O` |
+| Mover ventana mosaico superior izquierdo | `Ctrl + Meta + I` |
+| Mover ventana mosaico inferior derecho | `Ctrl + Meta + L` |
+| Mover ventana mosaico inferior izquierdo | `Ctrl + Meta + K` |
+
+### Selector de Tareas
+
+En _Preferencias > Gestión de Ventanas > Selector de Tareas_, ajusta el efecto a **Barra Lateral** para mostrar las ventanas abiertas en un panel lateral al usar `Alt + Tab`.
 
 ## PlatformIO y STLink — reglas udev
 
@@ -443,7 +459,7 @@ Daemon que convierte gestos del ratón en atajos de teclado de KDE Plasma, usand
 | **Atrás** + mover **derecha** | Escritorio virtual anterior |
 | **Atrás** + mover **izquierda** | Escritorio virtual siguiente |
 
-Consulta la [guía completa de instalación y uso](./scripts/mouse-gestures/README.md).
+Consulta la [guía completa de instalación y uso](./scripts/mouse-gestures/).
 
 ## OBS
 
