@@ -676,7 +676,14 @@ Configura tu usuario y correo electrónico para GIT
 ```bash
 git --global config user.name xxxxx
 git --global config user.email xxxxx
+```
+
+Y la configuración general de GIT
+
+```bash
 git config --global init.defaultBranch main
+git config --global pull.rebase false
+git config --global core.autocrlf input
 ```
 
 ## GIT Large File Storage
