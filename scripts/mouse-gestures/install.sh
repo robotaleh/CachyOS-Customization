@@ -27,6 +27,20 @@ _err()   { echo -e "${RED}[✗]${NC} $*" >&2; }
 _step()  { echo -e "\n${CYAN}${BOLD}── $* ──────────────────────────────${NC}"; }
 _ok()    { echo -e "${GREEN}${BOLD}[✓]${NC} $*"; }
 
+resolve_by_id_device() {
+    local target byid candidate
+    target=$(readlink -f "$1" 2>/dev/null) || return 1
+    for byid in /dev/input/by-id/*; do
+        [[ -L "$byid" ]] || continue
+        candidate=$(readlink -f "$byid" 2>/dev/null) || continue
+        if [[ "$candidate" == "$target" ]]; then
+            printf '%s\n' "$byid"
+            return 0
+        fi
+    done
+    return 1
+}
+
 # ── 0. Detener el servicio antes de tocar nada ────────────────────────────────
 # Crítico: el daemon captura el ratón de forma exclusiva (grab). Si está
 # corriendo durante la instalación, --detect-once no puede leer eventos
@@ -130,7 +144,22 @@ DETECTED_DEVICE=""
 
 # Si ya existe device.conf de una instalación anterior, preguntar si reconfigurar
 if [[ -f "${DROPIN_DIR}/device.conf" ]]; then
-    EXISTING_DEV=$(grep -oP '(?<=MOUSE_DEVICE=)/dev/input/event\d+' "${DROPIN_DIR}/device.conf" || true)
+    EXISTING_DEV=$(grep -oP '(?<=MOUSE_DEVICE=).+' "${DROPIN_DIR}/device.conf" || true)
+    if [[ -n "${EXISTING_DEV}" && "${EXISTING_DEV}" == /dev/input/event* ]]; then
+        EXISTING_BYID=$(resolve_by_id_device "${EXISTING_DEV}" || true)
+        if [[ -n "${EXISTING_BYID}" ]]; then
+            EXISTING_DEV="${EXISTING_BYID}"
+            _info "Migrando configuración antigua a ruta estable: ${EXISTING_BYID}"
+            mkdir -p "${DROPIN_DIR}"
+            cat > "${DROPIN_DIR}/device.conf" <<EOF
+# Generado por install.sh – modifica si tienes varios ratones
+[Service]
+Environment=MOUSE_DEVICE=${EXISTING_DEV}
+EOF
+            systemctl --user daemon-reload
+            _info "Configuración actualizada en ${DROPIN_DIR}/device.conf"
+        fi
+    fi
     EXISTING_NAME=$(cat "/sys/class/input/$(basename "${EXISTING_DEV:-x}")/device/name" 2>/dev/null || echo "desconocido")
     _info "Configuración existente: ${EXISTING_DEV:-ninguna}  (${EXISTING_NAME})"
     echo -e -n "  ${CYAN}¿Reconfigurar el ratón? [s/N]:${NC} "
@@ -157,6 +186,13 @@ if [[ "${SKIP_DETECTION}" == false ]]; then
     elif [[ "${CANDIDATE_COUNT}" -eq 1 ]]; then
         # Solo un candidato → usarlo directamente sin preguntar
         DETECTED_DEVICE=$("${BIN_DEST}" --list-devices 2>/dev/null | grep -oP '/dev/input/event\d+' | head -1)
+        if [[ -n "${DETECTED_DEVICE}" ]]; then
+            DETECTED_BYID=$(resolve_by_id_device "${DETECTED_DEVICE}" || true)
+            if [[ -n "${DETECTED_BYID}" ]]; then
+                _info "Traduciendo dispositivo a ruta estable: ${DETECTED_BYID}"
+                DETECTED_DEVICE="${DETECTED_BYID}"
+            fi
+        fi
         DEVICE_NAME=$(cat "/sys/class/input/$(basename "${DETECTED_DEVICE}")/device/name" 2>/dev/null || echo "desconocido")
         _ok "Único candidato: ${DETECTED_DEVICE}  (${DEVICE_NAME})"
 
@@ -180,6 +216,13 @@ if [[ "${SKIP_DETECTION}" == false ]]; then
     fi
 
     if [[ -n "${DETECTED_DEVICE}" ]]; then
+        if [[ "${DETECTED_DEVICE}" == /dev/input/event* ]]; then
+            DETECTED_BYID=$(resolve_by_id_device "${DETECTED_DEVICE}" || true)
+            if [[ -n "${DETECTED_BYID}" ]]; then
+                _info "Traduciendo dispositivo a ruta estable: ${DETECTED_BYID}"
+                DETECTED_DEVICE="${DETECTED_BYID}"
+            fi
+        fi
         DEVICE_NAME=$(cat "/sys/class/input/$(basename "${DETECTED_DEVICE}")/device/name" 2>/dev/null || echo "desconocido")
         _ok "Ratón seleccionado: ${DETECTED_DEVICE}  (${DEVICE_NAME})"
 

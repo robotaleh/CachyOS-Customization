@@ -29,6 +29,8 @@ Variables de entorno
 """
 
 import argparse
+import glob
+import errno
 import logging
 import os
 import shutil
@@ -72,6 +74,25 @@ def _find_qdbus() -> Optional[str]:
     return None
 
 QDBUS: Optional[str] = _find_qdbus()
+
+
+def resolve_by_id_device(path: str) -> Optional[str]:
+    """Devuelve la ruta estable /dev/input/by-id para un dispositivo eventX."""
+    try:
+        target = os.path.realpath(path)
+    except OSError:
+        return None
+
+    for byid in glob.glob("/dev/input/by-id/*"):
+        if not os.path.islink(byid):
+            continue
+        try:
+            candidate = os.path.realpath(byid)
+        except OSError:
+            continue
+        if candidate == target:
+            return byid
+    return None
 
 
 def _run_bg(cmd: list[str]) -> None:
@@ -167,7 +188,7 @@ def find_side_button_mouse() -> Optional[str]:
             ok = _has_side_buttons(dev) and not _is_virtual(dev)
             dev.close()
             if ok:
-                return path
+                return resolve_by_id_device(path) or path
         except (PermissionError, OSError):
             pass
     return None
@@ -183,7 +204,8 @@ def print_side_button_mice() -> None:
                 if not found:
                     print("Ratones con botones laterales detectados:")
                     found = True
-                print(f"  {path}  →  {dev.name}")
+                stable = resolve_by_id_device(path) or path
+                print(f"  {stable}  →  {dev.name}")
             dev.close()
         except (PermissionError, OSError):
             pass
@@ -264,6 +286,7 @@ def detect_once(timeout: float = 30.0) -> Optional[str]:
                             file=sys.stderr,
                         )
                         detected = dev.path
+                        detected = resolve_by_id_device(detected) or detected
                         return detected
     except KeyboardInterrupt:
         print("\nSaltado.", file=sys.stderr)
@@ -576,6 +599,7 @@ class MouseGestureService:
         except OSError as exc:
             if self._running:
                 log.error("Error de lectura del dispositivo: %s", exc)
+                raise
         finally:
             self._cleanup()
 
@@ -674,11 +698,10 @@ Variables de entorno:
         else:
             sys.exit(1)
 
-    device_path = (
-        args.device
-        or os.environ.get("MOUSE_DEVICE")
-        or find_side_button_mouse()
-    )
+    device_path = args.device or os.environ.get("MOUSE_DEVICE") or find_side_button_mouse()
+    if device_path and device_path.startswith("/dev/input/event"):
+        device_path = resolve_by_id_device(device_path) or device_path
+        log.info("Usando dispositivo estable: %s", device_path)
 
     if not device_path:
         log.error(
@@ -699,16 +722,28 @@ Variables de entorno:
             "  sudo pacman -S qt6-tools"
         )
 
-    service = MouseGestureService(device_path)
+    service: Optional[MouseGestureService] = None
 
     def _sighandler(signum, _frame):
         log.info("Señal %d recibida, apagando.", signum)
-        service.stop()
+        if service is not None:
+            service.stop()
 
     signal.signal(signal.SIGTERM, _sighandler)
     signal.signal(signal.SIGINT,  _sighandler)
 
-    service.run()
+    while True:
+        try:
+            service = MouseGestureService(device_path)
+            service.run()
+            break
+        except OSError as exc:
+            if exc.errno in (errno.ENOENT, errno.ENODEV):
+                log.error("Error de dispositivo: %s", exc)
+                log.info("Esperando a que el ratón vuelva a estar disponible...")
+                time.sleep(5)
+                continue
+            raise
 
 
 if __name__ == "__main__":

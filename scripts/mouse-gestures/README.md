@@ -96,8 +96,8 @@ Contenido de ejemplo:
 
 ```ini
 [Service]
-# Dispositivo del ratón (generado automáticamente por install.sh)
-Environment=MOUSE_DEVICE=/dev/input/event4
+# Dispositivo del ratón (ruta estable by-id, generado automáticamente por install.sh)
+Environment=MOUSE_DEVICE=/dev/input/by-id/usb-0000_0000-event-mouse
 
 # Segundos que hay que mantener pulsado Adelante para activar la captura
 # Valores más bajos = más sensible (puede activarse sin querer)
@@ -170,7 +170,25 @@ Asegúrate de que `qdbus6` está instalado (`which qdbus6`). El daemon lo usa pa
 
 ### No se detecta el ratón al arrancar
 
-El número del dispositivo (`eventX`) puede cambiar entre reinicios si tienes varios dispositivos USB. Fija el dispositivo por nombre en lugar de por número usando una regla udev, o simplemente vuelve a ejecutar `install.sh --detect-once` si cambia.
+El daemon utiliza rutas estables (`/dev/input/by-id/*`) que persisten entre reinicios y desconexiones USB. Si el ratón no está disponible al arrancar, el daemon reinenta automáticamente cada 5 segundos. Cuando el ratón reaparece, se reconecta sin intervención manual.
+
+Si la configuración no se aplicó correctamente:
+- Vuelve a ejecutar `install.sh` para que se vuelva a detectar el ratón y guarde su ruta estable.
+- Comprueba la configuración actual: `cat ~/.config/systemd/user/mouse-gesture-shortcuts.service.d/device.conf`
+
+### Desconexión prolongada (horas/reboot)
+
+El daemon espera automáticamente a que el ratón reaparezca:
+- Si desconectas el ratón y lo reconectas después de horas o tras un reboot, el daemon lo detecta y vuelve a monitorizarlo sin reinicio de servicio.
+- Los logs muestran: `"Esperando a que el ratón vuelva a estar disponible..."` cuando el dispositivo no está presente.
+
+Para verificar este comportamiento:
+```bash
+# Ver que el daemon está esperando
+journalctl --user -u mouse-gesture-shortcuts -f
+
+# Desconecta/Reconecta el ratón — el daemon reenconectará automáticamente
+```
 
 ### El servicio no arranca con la sesión gráfica
 
