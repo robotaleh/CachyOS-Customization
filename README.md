@@ -48,6 +48,7 @@ paru -S --sudoloop \
 	obs-transition-table qt6-webengine vlc visual-studio-code-bin pulseview spotify \
 	bazaar jdk-openjdk archlinux-java-run stm32cubemx orca-slicer f3d zsh fastfetch \
 	cachyos-gaming-meta \ steam wallpaper-engine-kde-plugin-git kvantum xdotool \
+	ttf-firacode-nerd \
 	wl-clipboard ydotool rclone teamviewer git-lfs expresslrs-configurator-bin \
 	prismlauncher
 ```
@@ -124,6 +125,18 @@ En VSCode configura el terminal por defecto a `zsh` y la fuente a `FiraCode Nerd
 "terminal.integrated.defaultProfile.linux": "zsh",
 "terminal.integrated.fontFamily": "FiraCode Nerd Font Mono",
 ```
+
+> [!NOTE]
+> Si la fuente `FiraCode Nerd Font` no se ve correctamente, asegúrate de haberla instalado desde [AUR](#aur).
+
+Por último, activa `zsh` como la shell por defecto del sistema (sustituye la shell actual al iniciar sesión):
+
+```bash
+chsh -s $(which zsh)
+```
+
+> [!IMPORTANT]
+> Cierra sesión y vuelve a entrar para que el cambio surta efecto. La shell por defecto en Konsole se hereda de esta configuración del sistema.
 
 ## Wallpaper Engine (KDE)
 
@@ -206,6 +219,33 @@ San Francisco Pro ([repositorio](https://github.com/sahibjotsaggu/San-Francisco-
 ```bash
 cd && sudo ./.local/share/plasma/plasmoids/org.kde.windowbuttons/lib-install.sh
 ```
+
+### Barra superior y widgets del escritorio
+
+Ajustes visuales de la barra superior y los widgets del escritorio de Plasma:
+
+#### Transparencia en widgets
+
+Establece transparencia permanente en los widgets del escritorio desde las preferencias del _Panel_:
+
+1. Pulsa botón derecho sobre el escritorio y selecciona _Editar modo de edición_.
+2. En la esquina superior derecha del widget, pulsa sobre _Configurar widget_ (icono de llave inglesa).
+3. En la opción _Fondo_, selecciona **Traslúcido** (sin tono).
+
+#### Window Title de la barra superior
+
+En el componente _Window Title_ de la barra superior:
+
+1. Pulsa botón derecho sobre el componente y selecciona _Mostrar solo icono_ (o en su defecto, _Configurar Window Title_ y marca la opción _Sin texto_).
+
+#### Reloj de la barra superior
+
+Configura el reloj de la barra superior:
+
+1. Pulsa botón derecho sobre el reloj → _Configurar el reloj digital_.
+2. Desmarca **Mostrar fecha**.
+3. En _Formato_, selecciona **24h**.
+4. Arrastra el reloj a la parte derecha de la barra superior para que quede junto al _System Tray_.
 
 ## Fondo dinámico en inicio de sesión
 
