@@ -31,6 +31,8 @@ Guía personal para preparar y personalizar un entorno CachyOS a mi gusto. Estab
 - [GIT Large File Storage](#git-large-file-storage)
 - [Gaming](#gaming)
 - [Solución de Problemas](#solución-de-problemas)
+  - [Touchpad no detectado](#touchpad-no-detectado-tras-la-instalación)
+  - [Conflicto plugins CachyUpdate](#conflicto-de-plugins-en-cachyupdate-vlc-plugin-lua-vs-vlc-plugin-luajit)
 - [Inicio Automático](#inicio-automático)
 
 ---
@@ -708,6 +710,33 @@ git add .gitattributes
 Usa `Proton Experimental` en Steam cuando necesites compatibilidad.
 
 ## Solución de Problemas
+
+### Touchpad no detectado tras la instalación
+
+En algunos portátiles el touchpad no funciona porque el módulo `mfd` (Multi-Function Device) no se carga correctamente durante el arranque. Para solucionarlo:
+
+1. Edita el archivo de instalación de initcpio para `block`:
+
+```bash
+sudo nano /usr/lib/initcpio/install/block
+```
+
+2. Busca y **comenta** la siguiente línea añadiendo un `#` al inicio:
+
+```ini
+# add_checked_modules '/drivers/mfd/'
+```
+
+3. Reconstruye la imagen de initramfs:
+
+```bash
+sudo mkinitcpio -P
+```
+
+4. Reinicia el sistema.
+
+> [!NOTE]
+> Comentar esta línea evita que initcpio filtre los controladores del subsistema `mfd`, permitiendo que se carguen los módulos correctos para el touchpad en el arranque.
 
 ### Conflicto de plugins en CachyUpdate (vlc-plugin-lua vs vlc-plugin-luajit)
 
