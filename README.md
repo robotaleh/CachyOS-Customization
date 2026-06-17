@@ -674,8 +674,8 @@ Añade el dispositivo a la cuenta para permitir conexión desatendida
 Configura tu usuario y correo electrónico para GIT
 
 ```bash
-git --global config user.name xxxxx
-git --global config user.email xxxxx
+git config --global user.name xxxxx
+git config --global user.email xxxxx
 ```
 
 Y la configuración general de GIT
